@@ -13,8 +13,9 @@ type Action =
   | { type: 'reorder'; activeId: string; overId: string }
   | { type: 'clearCompleted' }
   | { type: 'addCategory'; category: Category }
+  | { type: 'addList'; category: Category; tasks: Task[]; position: 'top' | 'bottom' }
   | { type: 'updateCategory'; id: string; patch: Partial<Category> }
-  | { type: 'deleteCategory'; id: string };
+  | { type: 'deleteCategory'; id: string; withTasks?: boolean };
 
 function reducer(state: AppData, action: Action): AppData {
   const now = Date.now();
@@ -58,6 +59,11 @@ function reducer(state: AppData, action: Action): AppData {
       return { ...state, tasks: state.tasks.filter((t) => !t.completed) };
     case 'addCategory':
       return { ...state, categories: [...state.categories, action.category] };
+    case 'addList':
+      return {
+        categories: [...state.categories, action.category],
+        tasks: action.position === 'top' ? [...action.tasks, ...state.tasks] : [...state.tasks, ...action.tasks],
+      };
     case 'updateCategory':
       return {
         ...state,
@@ -66,7 +72,9 @@ function reducer(state: AppData, action: Action): AppData {
     case 'deleteCategory':
       return {
         categories: state.categories.filter((c) => c.id !== action.id),
-        tasks: state.tasks.map((t) => (t.categoryId === action.id ? { ...t, categoryId: null } : t)),
+        tasks: action.withTasks
+          ? state.tasks.filter((t) => t.categoryId !== action.id)
+          : state.tasks.map((t) => (t.categoryId === action.id ? { ...t, categoryId: null, section: null } : t)),
       };
   }
 }
@@ -120,6 +128,7 @@ function useStoreValue() {
           priority: 0,
           dueDate: null,
           categoryId: null,
+          section: null,
           ...input,
           id: uid(),
           createdAt: now,
@@ -148,8 +157,33 @@ function useStoreValue() {
         dispatch({ type: 'addCategory', category });
         return category;
       },
+      /** Creates a list together with its tasks, keeping the given order (used by templates). */
+      addList(name: string, color: CategoryColor, items: { title: string; section: string | null }[]): Category {
+        const now = Date.now();
+        const category = { id: uid(), name: name.trim(), color };
+        const tasks: Task[] = items.map((item) => ({
+          id: uid(),
+          title: item.title,
+          notes: '',
+          completed: false,
+          completedAt: null,
+          priority: 0,
+          dueDate: null,
+          categoryId: category.id,
+          section: item.section,
+          createdAt: now,
+          updatedAt: now,
+        }));
+        dispatch({ type: 'addList', category, tasks, position: prefsRef.current.newTaskPosition });
+        return category;
+      },
       updateCategory: (id: string, patch: Partial<Category>) => dispatch({ type: 'updateCategory', id, patch }),
-      deleteCategory: (id: string) => dispatch({ type: 'deleteCategory', id }),
+      /** Deletes a list, keeping its tasks (moved to "No list") unless `withTasks`. Returns an undo function. */
+      deleteCategory(id: string, withTasks = false): () => void {
+        const snapshot = dataRef.current;
+        dispatch({ type: 'deleteCategory', id, withTasks });
+        return () => dispatch({ type: 'hydrate', data: snapshot });
+      },
       replaceData: (next: AppData) => dispatch({ type: 'hydrate', data: next }),
       mergeData(incoming: AppData): number {
         const cur = dataRef.current;

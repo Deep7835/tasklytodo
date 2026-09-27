@@ -1,4 +1,4 @@
-import { CalendarDays, CalendarX2, Flag, Inbox, Sun, Sunrise, CalendarClock } from 'lucide-react';
+import { CalendarDays, CalendarX, Flag, Inbox, Sun, Sunrise, CalendarDate } from 'reicon-react';
 import { useRef } from 'react';
 import { MenuItem } from './Popover';
 import { addDays, fromKey, nextWeekday, todayKey } from '../lib/date';
@@ -40,7 +40,7 @@ export function DueMenu({ value, onChange, close }: { value: string | null; onCh
         onClick={() => pick(addDays(today, 1))}
       />
       <MenuItem
-        icon={<CalendarClock className="size-3.5" />}
+        icon={<CalendarDate className="size-3.5" />}
         label="Next week"
         hint={weekday(nextWeekday(1))}
         selected={value === nextWeekday(1)}
@@ -61,7 +61,7 @@ export function DueMenu({ value, onChange, close }: { value: string | null; onCh
       {value && (
         <>
           <div className="my-1 h-px bg-line" />
-          <MenuItem icon={<CalendarX2 className="size-3.5" />} label="No date" onClick={() => pick(null)} />
+          <MenuItem icon={<CalendarX className="size-3.5" />} label="No date" onClick={() => pick(null)} />
         </>
       )}
     </div>

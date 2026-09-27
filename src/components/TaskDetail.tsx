@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { CalendarDays, Hash, Inbox, Trash2, X } from 'lucide-react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { CalendarDays, Hashtag, Inbox, Layers, Trash2, X } from 'reicon-react';
 import { Modal } from './Modal';
 import { Checkbox } from './Checkbox';
 import { CategoryDot, PriorityFlag } from './pickers';
@@ -113,7 +113,7 @@ function DetailBody({ task, onClose, onDelete }: { task: Task; onClose: () => vo
           aria-label="Task title"
           data-keep-size
           className={cn(
-            'w-full resize-none overflow-hidden bg-transparent text-[19px] leading-[1.4] font-semibold tracking-[-0.015em] outline-none placeholder:text-faint',
+            'w-full resize-none overflow-hidden bg-transparent text-[19px] leading-[1.4] font-medium tracking-[-0.015em] outline-none placeholder:text-faint',
             task.completed && 'text-muted line-through decoration-faint',
           )}
           placeholder="Task title"
@@ -192,7 +192,7 @@ function DetailBody({ task, onClose, onDelete }: { task: Task; onClose: () => vo
           </div>
         </Field>
 
-        <Field label="List" icon={<Hash className="size-3.5" />}>
+        <Field label="List" icon={<Hashtag className="size-3.5" />}>
           <div className="flex flex-wrap gap-1.5">
             <button type="button" onClick={() => set({ categoryId: null })} className={pill(task.categoryId === null)}>
               <Inbox className="size-3.5" />
@@ -206,6 +206,8 @@ function DetailBody({ task, onClose, onDelete }: { task: Task; onClose: () => vo
             ))}
           </div>
         </Field>
+
+        {task.categoryId && <SectionField task={task} onChange={(section) => set({ section })} />}
       </div>
 
       <div className="mt-auto flex items-center justify-between gap-3 border-t border-line px-5 py-3">
@@ -223,6 +225,41 @@ function DetailBody({ task, onClose, onDelete }: { task: Task; onClose: () => vo
         </button>
       </div>
     </div>
+  );
+}
+
+/** Free-text section with the list's existing sections offered as suggestions. */
+function SectionField({ task, onChange }: { task: Task; onChange: (section: string | null) => void }) {
+  const { data } = useStore();
+  const [value, setValue] = useState(task.section ?? '');
+  useEffect(() => setValue(task.section ?? ''), [task.section]);
+  const listId = useId();
+  const existing = [...new Set(data.tasks.filter((t) => t.categoryId === task.categoryId && t.section).map((t) => t.section!))];
+
+  const commit = () => {
+    const next = value.trim() || null;
+    if (next !== task.section) onChange(next);
+  };
+
+  return (
+    <Field label="Section" icon={<Layers className="size-3.5" />}>
+      <input
+        value={value}
+        list={listId}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+        maxLength={40}
+        placeholder="No section"
+        aria-label="Section"
+        className="h-9 w-full rounded-lg border border-line bg-transparent px-3 text-[13.5px] outline-none transition-colors placeholder:text-faint focus:border-line-strong"
+      />
+      <datalist id={listId}>
+        {existing.map((s) => (
+          <option key={s} value={s} />
+        ))}
+      </datalist>
+    </Field>
   );
 }
 

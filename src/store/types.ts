@@ -10,6 +10,8 @@ export interface Task {
   /** Local calendar date, `YYYY-MM-DD`. */
   dueDate: string | null;
   categoryId: string | null;
+  /** Heading the task is grouped under inside its list (e.g. "Planning"). `null` = ungrouped. */
+  section: string | null;
   createdAt: number;
   updatedAt: number;
 }

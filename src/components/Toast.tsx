@@ -50,7 +50,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             {t.action ? (
               <button
                 type="button"
-                className="rounded-lg px-2.5 py-1 text-[13px] font-semibold text-white/90 transition-colors hover:bg-white/10"
+                className="rounded-lg px-2.5 py-1 text-[13px] font-medium text-white/90 transition-colors hover:bg-white/10"
                 onClick={() => {
                   t.action!.onClick();
                   dismiss(t.id);

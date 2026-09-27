@@ -13,6 +13,17 @@ export function useMediaQuery(query: string): boolean {
 
 export const useIsDesktop = () => useMediaQuery('(min-width: 768px)');
 
+/** Whether the page is scrolled past `offset` px. Only re-renders when that flips. */
+export function useScrolledPast(offset: number): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      window.addEventListener('scroll', cb, { passive: true });
+      return () => window.removeEventListener('scroll', cb);
+    },
+    () => window.scrollY > offset,
+  );
+}
+
 /** Re-renders every `ms` so time-of-day text (greeting, "Today") stays fresh. */
 export function useNow(ms = 60_000): Date {
   const [now, setNow] = useState(() => new Date());

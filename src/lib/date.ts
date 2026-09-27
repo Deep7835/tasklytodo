@@ -43,10 +43,10 @@ export function formatDue(key: string): string {
 
 export function greeting(date = new Date()): string {
   const h = date.getHours();
-  if (h < 5) return 'Good evening';
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
-  return 'Good evening';
+  if (h < 5) return 'Good Evening';
+  if (h < 12) return 'Good Morning';
+  if (h < 18) return 'Good Afternoon';
+  return 'Good Evening';
 }
 
 export const longDate = (date = new Date()) =>

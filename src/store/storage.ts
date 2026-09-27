@@ -80,6 +80,7 @@ function normalizeTask(t: unknown): Task | null {
     priority,
     dueDate: typeof o.dueDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(o.dueDate) ? o.dueDate : null,
     categoryId: typeof o.categoryId === 'string' ? o.categoryId : null,
+    section: typeof o.section === 'string' && o.section.trim() ? o.section.trim() : null,
     createdAt: typeof o.createdAt === 'number' ? o.createdAt : now,
     updatedAt: typeof o.updatedAt === 'number' ? o.updatedAt : now,
   };

@@ -49,10 +49,13 @@ export function selectView(tasks: Task[], opts: { scope: Scope; filter: Filter; 
 export function todayStats(tasks: Task[]) {
   const today = todayKey();
   let open = 0;
+  let overdue = 0;
   let done = 0;
   for (const t of tasks) {
-    if (!t.completed && t.dueDate && t.dueDate <= today) open++;
-    else if (t.completed && (t.dueDate === today || isToday(t.completedAt))) done++;
+    if (!t.completed && t.dueDate && t.dueDate <= today) {
+      open++;
+      if (t.dueDate < today) overdue++;
+    } else if (t.completed && (t.dueDate === today || isToday(t.completedAt))) done++;
   }
-  return { open, done, total: open + done };
+  return { open, overdue, done, total: open + done };
 }

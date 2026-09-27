@@ -1,5 +1,5 @@
 import { forwardRef, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import { ArrowUp, CalendarDays, Hash, Plus } from 'lucide-react';
+import { ArrowUp, CalendarDays, Hashtag, Plus } from 'reicon-react';
 import { Popover } from './Popover';
 import { CategoryDot, CategoryMenu, DueMenu, PriorityFlag, PriorityMenu } from './pickers';
 import { formatDue, isOverdue } from '../lib/date';
@@ -61,6 +61,70 @@ export const QuickAdd = forwardRef<QuickAddHandle, Props>(function QuickAdd({ de
       active ? 'border-line-strong bg-surface text-fg' : 'border-dashed border-line-strong text-muted hover:border-faint hover:text-fg',
     );
 
+  const inline = variant === 'inline';
+  const pickers = (
+    <>
+      <Popover
+        trigger={({ toggle }) => (
+          <button type="button" onClick={toggle} className={chip(!!dueDate)}>
+            <CalendarDays className={cn('size-3.5', dueDate && isOverdue(dueDate) && 'text-[#e5484d]')} />
+            {dueDate ? formatDue(dueDate) : 'Due date'}
+          </button>
+        )}
+      >
+        {(close) => (
+          <DueMenu
+            value={dueDate}
+            onChange={(v) => {
+              setOver((o) => ({ ...o, dueDate: v }));
+              refocus();
+            }}
+            close={close}
+          />
+        )}
+      </Popover>
+      <Popover
+        trigger={({ toggle }) => (
+          <button type="button" onClick={toggle} className={chip(priority > 0)}>
+            <PriorityFlag priority={priority} />
+            {priority ? PRIORITY_LABEL[priority] : 'Priority'}
+          </button>
+        )}
+      >
+        {(close) => (
+          <PriorityMenu
+            value={priority}
+            onChange={(p) => {
+              setOver((o) => ({ ...o, priority: p }));
+              refocus();
+            }}
+            close={close}
+          />
+        )}
+      </Popover>
+      <Popover
+        trigger={({ toggle }) => (
+          <button type="button" onClick={toggle} className={chip(!!category)}>
+            {category ? <CategoryDot category={category} /> : <Hashtag className="size-3.5" />}
+            {category ? category.name : 'List'}
+          </button>
+        )}
+      >
+        {(close) => (
+          <CategoryMenu
+            categories={data.categories}
+            value={categoryId}
+            onChange={(id) => {
+              setOver((o) => ({ ...o, categoryId: id }));
+              refocus();
+            }}
+            close={close}
+          />
+        )}
+      </Popover>
+    </>
+  );
+
   return (
     <form
       ref={boxRef}
@@ -76,11 +140,11 @@ export const QuickAdd = forwardRef<QuickAddHandle, Props>(function QuickAdd({ de
       }}
       className={cn(
         'group rounded-2xl transition-[background-color,border-color,box-shadow] duration-200',
-        variant === 'inline' && 'border bg-surface',
-        variant === 'inline' && (expanded ? 'border-line-strong shadow-soft' : 'border-line hover:border-line-strong'),
+        inline && 'border bg-surface',
+        inline && (expanded ? 'border-line-strong shadow-soft' : 'border-line hover:border-line-strong'),
       )}
     >
-      <div className={cn('flex items-center gap-3', variant === 'inline' ? 'px-3.5' : 'px-5')}>
+      <div className={cn('flex items-center gap-3', inline ? 'px-3.5' : 'px-5')}>
         <span
           className={cn(
             'grid size-[19px] shrink-0 place-items-center rounded-full transition-colors',
@@ -101,30 +165,31 @@ export const QuickAdd = forwardRef<QuickAddHandle, Props>(function QuickAdd({ de
             }
           }}
           autoFocus={autoFocus}
-          placeholder={variant === 'sheet' ? 'What do you need to do?' : 'Add a task…'}
+          placeholder={inline ? (focused ? 'Try “Call Sam tomorrow #work !high”' : 'Add a task…') : 'What do you need to do?'}
           aria-label="New task title"
-          data-keep-size={variant === 'sheet' || undefined}
+          data-keep-size={!inline || undefined}
           enterKeyHint="done"
           autoComplete="off"
-          className={cn(
-            'h-12 min-w-0 flex-1 bg-transparent text-[15px] text-fg outline-none placeholder:text-faint',
-            variant === 'sheet' && 'h-14 text-[17px]',
-          )}
+          className={cn('min-w-0 flex-1 bg-transparent text-fg outline-none placeholder:text-faint', inline ? 'h-12 text-[14.5px]' : 'h-14 text-[17px]')}
         />
-        {variant === 'inline' ? (
-          <kbd
-            className={cn(
-              'hidden rounded-md border border-line px-1.5 py-0.5 font-sans text-[11px] font-medium text-faint transition-opacity sm:block',
-              canSubmit ? 'opacity-100' : 'opacity-0',
-            )}
-          >
-            ↵ Enter
-          </kbd>
+        {inline ? (
+          // One row: pickers sit at the right edge of the input instead of on a second line.
+          <>
+            <div className={cn('flex shrink-0 items-center gap-1.5 transition-opacity duration-200', !expanded && 'opacity-60')}>{pickers}</div>
+            <kbd
+              className={cn(
+                'rounded-md border border-line px-1.5 py-0.5 font-sans text-[11px] font-medium text-faint transition-opacity',
+                canSubmit ? 'opacity-100' : 'opacity-0',
+              )}
+            >
+              ↵
+            </kbd>
+          </>
         ) : (
           <button
             type="submit"
             disabled={!canSubmit}
-            className="grid size-9 shrink-0 place-items-center rounded-full bg-accent text-accent-fg transition-[opacity,transform] active:scale-95 disabled:opacity-30"
+            className="btn-primary grid size-9 shrink-0 place-items-center rounded-full disabled:opacity-30"
             aria-label="Add task"
           >
             <ArrowUp className="size-[18px]" strokeWidth={2.5} />
@@ -132,78 +197,7 @@ export const QuickAdd = forwardRef<QuickAddHandle, Props>(function QuickAdd({ de
         )}
       </div>
 
-      {/* Always rendered (never collapsed on blur) so clicking elsewhere can't shift the list under the pointer. */}
-      <div
-        className={cn(
-          'flex flex-wrap items-center gap-1.5 pb-3 transition-opacity duration-200',
-          variant === 'inline' ? 'pr-3 pl-[46px]' : 'px-5 pb-4',
-          !expanded && 'opacity-60',
-        )}
-      >
-        <Popover
-          trigger={({ toggle }) => (
-            <button type="button" onClick={toggle} className={chip(!!dueDate)}>
-              <CalendarDays className={cn('size-3.5', dueDate && isOverdue(dueDate) && 'text-[#e5484d]')} />
-              {dueDate ? formatDue(dueDate) : 'Due date'}
-            </button>
-          )}
-        >
-          {(close) => (
-            <DueMenu
-              value={dueDate}
-              onChange={(v) => {
-                setOver((o) => ({ ...o, dueDate: v }));
-                refocus();
-              }}
-              close={close}
-            />
-          )}
-        </Popover>
-        <Popover
-          trigger={({ toggle }) => (
-            <button type="button" onClick={toggle} className={chip(priority > 0)}>
-              <PriorityFlag priority={priority} />
-              {priority ? PRIORITY_LABEL[priority] : 'Priority'}
-            </button>
-          )}
-        >
-          {(close) => (
-            <PriorityMenu
-              value={priority}
-              onChange={(p) => {
-                setOver((o) => ({ ...o, priority: p }));
-                refocus();
-              }}
-              close={close}
-            />
-          )}
-        </Popover>
-        <Popover
-          trigger={({ toggle }) => (
-            <button type="button" onClick={toggle} className={chip(!!category)}>
-              {category ? <CategoryDot category={category} /> : <Hash className="size-3.5" />}
-              {category ? category.name : 'List'}
-            </button>
-          )}
-        >
-          {(close) => (
-            <CategoryMenu
-              categories={data.categories}
-              value={categoryId}
-              onChange={(id) => {
-                setOver((o) => ({ ...o, categoryId: id }));
-                refocus();
-              }}
-              close={close}
-            />
-          )}
-        </Popover>
-        {variant === 'inline' && focused && !text && (
-          <span className="ml-1 hidden animate-fade-in text-[12px] text-faint lg:inline">
-            Tip: try “Call Sam tomorrow #work !high”
-          </span>
-        )}
-      </div>
+      {!inline && <div className="flex flex-wrap items-center gap-1.5 px-5 pb-4">{pickers}</div>}
     </form>
   );
 });

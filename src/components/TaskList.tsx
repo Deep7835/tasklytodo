@@ -45,7 +45,7 @@ export function TaskList(props: ListProps) {
 
   if (!sortable) {
     return (
-      <ul aria-label={label} className="flex flex-col gap-px">
+      <ul aria-label={label} className="flex flex-col gap-2">
         {tasks.map((t) => (
           <Row key={t.id} task={t} {...props} />
         ))}
@@ -77,7 +77,7 @@ export function TaskList(props: ListProps) {
       }}
     >
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-        <ul aria-label={label} className="relative flex flex-col gap-px">
+        <ul aria-label={label} className="relative flex flex-col gap-2">
           {tasks.map((t) => (
             <SortableRow key={t.id} task={t} {...props} anyDragging={activeId !== null} />
           ))}

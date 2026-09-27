@@ -1,5 +1,27 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Check, Download, Laptop, Moon, Plus, PlusSquare, Share, Sun, Trash2, Upload, Smartphone, Wifi, WifiOff } from 'lucide-react';
+import {
+  Check,
+  ChevronRight,
+  ColorSwatch,
+  Danger,
+  DocumentDownload,
+  Download,
+  Keyboard,
+  Laptop,
+  Layers,
+  Mobile,
+  Moon,
+  Plus,
+  PlusSquare,
+  Setting4,
+  Share,
+  Sun,
+  Trash2,
+  Upload,
+  User,
+  Wifi,
+  WifiOff,
+} from 'reicon-react';
 import { Modal } from './Modal';
 import { Popover } from './Popover';
 import { btn, type ConfirmOptions } from './Confirm';
@@ -16,6 +38,8 @@ interface Props {
   onClose: () => void;
   confirm: (o: ConfirmOptions) => void;
 }
+
+const DANGER = '#e5484d';
 
 export function Settings({ open, onClose, confirm }: Props) {
   const store = useStore();
@@ -72,23 +96,38 @@ export function Settings({ open, onClose, confirm }: Props) {
   };
 
   const completedCount = data.tasks.filter((t) => t.completed).length;
+  const name = prefs.name.trim();
+  const accentLabel = ACCENTS.find((a) => a.id === prefs.accent)?.label;
 
   return (
     <Modal open={open} onClose={onClose} title="Settings">
-      <div className="flex flex-col gap-7 px-5 pt-2 pb-6">
-        <Section title="Appearance">
-          <Row label="Theme">
-            <Segmented<Theme>
-              value={prefs.theme}
-              onChange={(theme) => setPrefs({ theme })}
-              options={[
-                { value: 'light', label: 'Light', icon: <Sun className="size-3.5" /> },
-                { value: 'dark', label: 'Dark', icon: <Moon className="size-3.5" /> },
-                { value: 'system', label: 'System', icon: <Laptop className="size-3.5" /> },
-              ]}
+      {/* Grouped cards on a quiet background, like iOS settings. */}
+      <div className="flex flex-col gap-6 bg-sidebar px-4 pt-4 pb-6 sm:px-5">
+        {/* Profile */}
+        <div className="flex items-center gap-4 rounded-2xl border border-line bg-elevated p-4">
+          <span className="btn-primary grid size-14 shrink-0 place-items-center rounded-full text-[22px] font-medium" aria-hidden>
+            {name ? name[0].toUpperCase() : <User className="size-6" />}
+          </span>
+          <div className="min-w-0 flex-1">
+            <input
+              value={prefs.name}
+              onChange={(e) => setPrefs({ name: e.target.value })}
+              placeholder="Add your name"
+              maxLength={40}
+              aria-label="Your name"
+              className="-mx-1.5 h-8 w-[calc(100%+0.75rem)] rounded-lg bg-transparent px-1.5 text-[17px] font-medium tracking-[-0.01em] outline-none transition-colors placeholder:text-faint hover:bg-hover focus:bg-hover"
             />
-          </Row>
-          <Row label="Accent">
+            <p className="mt-0.5 text-[12.5px] text-muted tabular-nums">
+              {data.tasks.length} tasks · {data.categories.length} lists · {completedCount} done
+            </p>
+          </div>
+        </div>
+
+        <Group icon={<ColorSwatch className="size-4" />} title="Appearance">
+          <SettingRow label="Theme" stack>
+            <ThemePicker value={prefs.theme} onChange={(theme) => setPrefs({ theme })} />
+          </SettingRow>
+          <SettingRow label="Accent color" hint={accentLabel}>
             <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Accent color">
               {ACCENTS.map((a) => (
                 <button
@@ -100,7 +139,7 @@ export function Settings({ open, onClose, confirm }: Props) {
                   title={a.label}
                   onClick={() => setPrefs({ accent: a.id })}
                   className={cn(
-                    'grid size-7 place-items-center rounded-full border border-black/10 ring-offset-2 ring-offset-elevated transition-transform hover:scale-110 dark:border-white/20',
+                    'grid size-7 place-items-center rounded-full border border-black/10 ring-offset-2 ring-offset-elevated transition-transform duration-150 ease-out active:scale-95 dark:border-white/20',
                     prefs.accent === a.id && 'ring-2 ring-line-strong',
                   )}
                   style={{ backgroundColor: a.swatch }}
@@ -109,20 +148,11 @@ export function Settings({ open, onClose, confirm }: Props) {
                 </button>
               ))}
             </div>
-          </Row>
-        </Section>
+          </SettingRow>
+        </Group>
 
-        <Section title="Preferences">
-          <Row label="Your name" hint="Used in the greeting">
-            <input
-              value={prefs.name}
-              onChange={(e) => setPrefs({ name: e.target.value })}
-              placeholder="Optional"
-              maxLength={40}
-              className="h-9 w-full rounded-lg border border-line bg-surface px-3 text-[14px] outline-none transition-colors placeholder:text-faint focus:border-accent sm:w-48"
-            />
-          </Row>
-          <Row label="Add new tasks to">
+        <Group icon={<Setting4 className="size-4" />} title="Preferences">
+          <SettingRow label="Add new tasks to" hint="Where quick-added tasks appear">
             <Segmented
               value={prefs.newTaskPosition}
               onChange={(newTaskPosition) => setPrefs({ newTaskPosition })}
@@ -131,113 +161,157 @@ export function Settings({ open, onClose, confirm }: Props) {
                 { value: 'bottom', label: 'Bottom' },
               ]}
             />
-          </Row>
-          <Row label="Show completed in “All”">
+          </SettingRow>
+          <SettingRow label="Show completed in “All”" hint="Keep finished tasks visible below the list">
             <Switch checked={prefs.showCompletedInAll} onChange={(v) => setPrefs({ showCompletedInAll: v })} label="Show completed tasks in All" />
-          </Row>
-        </Section>
+          </SettingRow>
+        </Group>
 
-        <Section title="Lists">
+        <Group icon={<Layers className="size-4" />} title="Lists" description="Rename a list by clicking its name. Click the dot to change its color.">
           <ListManager confirm={confirm} />
-        </Section>
+        </Group>
 
-        <Section title="Backup & data">
-          <p className="-mt-1 text-[13px] leading-relaxed text-muted">
-            Your tasks are stored only on this device. Export a backup to move them or keep them safe.
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            <button type="button" onClick={exportJson} className={btn('default')}>
-              <Download className="size-4" /> Export JSON
-            </button>
-            <button type="button" onClick={() => fileRef.current?.click()} className={btn('default')}>
-              <Upload className="size-4" /> Import JSON
-            </button>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="application/json,.json"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) importFile(f);
-                e.target.value = '';
-              }}
-            />
-          </div>
-          <div className="flex flex-col divide-y divide-line rounded-xl border border-line">
-            <DangerRow
-              label="Clear completed tasks"
-              detail={`${completedCount} completed`}
-              disabled={!completedCount}
-              onClick={() =>
-                confirm({
-                  title: 'Clear completed tasks?',
-                  message: `This removes ${completedCount} completed task${completedCount === 1 ? '' : 's'}.`,
-                  actions: [
-                    {
-                      label: 'Clear',
-                      tone: 'danger',
-                      onClick: () => {
-                        const undo = store.clearCompleted();
-                        toast('Completed tasks cleared', { action: { label: 'Undo', onClick: undo } });
-                      },
-                    },
-                  ],
-                })
-              }
-            />
-            <DangerRow
-              label="Erase all data"
-              detail="Tasks and lists"
-              onClick={() =>
-                confirm({
-                  title: 'Erase everything?',
-                  message: 'All tasks and lists on this device will be permanently deleted. Consider exporting a backup first.',
-                  actions: [
-                    {
-                      label: 'Erase',
-                      tone: 'danger',
-                      onClick: () => {
-                        store.resetAll();
-                        setPrefs({ lastScope: null, lastFilter: 'all' });
-                        toast('All data erased');
-                      },
-                    },
-                  ],
-                })
-              }
-            />
-          </div>
-        </Section>
+        <Group icon={<DocumentDownload className="size-4" />} title="Backup" description="Your tasks are stored only on this device. Export a backup to move them or keep them safe.">
+          <ActionRow icon={<Download className="size-[18px]" />} label="Export backup" hint="Save all tasks and lists as a JSON file" onClick={exportJson} />
+          <ActionRow icon={<Upload className="size-[18px]" />} label="Import backup" hint="Merge or replace from a JSON file" onClick={() => fileRef.current?.click()} />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) importFile(f);
+              e.target.value = '';
+            }}
+          />
+        </Group>
 
-        <Section title="App">
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-line px-3.5 py-3">
-            <div className="flex items-center gap-3">
-              <span className={cn('grid size-8 place-items-center rounded-lg', online ? 'bg-[#30a46c]/12 text-[#30a46c]' : 'bg-hover text-muted')}>
+        <Group icon={<Danger className="size-4" />} title="Danger zone" tone="danger">
+          <ActionRow
+            danger
+            icon={<Check className="size-[18px]" />}
+            label="Clear completed tasks"
+            hint={completedCount ? `${completedCount} completed task${completedCount === 1 ? '' : 's'}` : 'Nothing to clear'}
+            disabled={!completedCount}
+            onClick={() =>
+              confirm({
+                title: 'Clear completed tasks?',
+                message: `This removes ${completedCount} completed task${completedCount === 1 ? '' : 's'}.`,
+                actions: [
+                  {
+                    label: 'Clear',
+                    tone: 'danger',
+                    onClick: () => {
+                      const undo = store.clearCompleted();
+                      toast('Completed tasks cleared', { action: { label: 'Undo', onClick: undo } });
+                    },
+                  },
+                ],
+              })
+            }
+          />
+          <ActionRow
+            danger
+            icon={<Trash2 className="size-[18px]" />}
+            label="Erase all data"
+            hint="Permanently deletes every task and list on this device"
+            onClick={() =>
+              confirm({
+                title: 'Erase everything?',
+                message: 'All tasks and lists on this device will be permanently deleted. Consider exporting a backup first.',
+                actions: [
+                  {
+                    label: 'Erase',
+                    tone: 'danger',
+                    onClick: () => {
+                      store.resetAll();
+                      setPrefs({ lastScope: null, lastFilter: 'all' });
+                      toast('All data erased');
+                    },
+                  },
+                ],
+              })
+            }
+          />
+        </Group>
+
+        <Group icon={<Mobile className="size-4" />} title="App">
+          <SettingRow
+            icon={
+              <span className={cn('grid size-8 place-items-center rounded-full', online ? 'bg-[#30a46c]/12 text-[#30a46c]' : 'bg-hover text-muted')}>
                 {online ? <Wifi className="size-4" /> : <WifiOff className="size-4" />}
               </span>
-              <div>
-                <p className="text-[13.5px] font-medium">{online ? 'Online' : 'Offline'}</p>
-                <p className="text-[12.5px] text-muted">Taskly works fully offline.</p>
-              </div>
-            </div>
+            }
+            label={online ? 'Online' : 'Offline'}
+            hint="Taskly works fully offline"
+          >
             {install.available && (
               <button type="button" onClick={install.prompt} className={btn('primary')}>
-                <Smartphone className="size-4" /> Install
+                <Mobile className="size-4" /> Install
               </button>
             )}
-          </div>
+          </SettingRow>
           <AddToHomeScreen />
-          <div className="hidden text-[12.5px] leading-6 text-muted md:block">
-            <p className="mb-1 font-medium text-fg">Keyboard shortcuts</p>
+        </Group>
+
+        <div className="hidden md:block">
+          <Group icon={<Keyboard className="size-4" />} title="Keyboard shortcuts">
             <Shortcut keys={['N']} label="New task" />
             <Shortcut keys={['/']} label="Search" />
-            <Shortcut keys={['Esc']} label="Close / clear" />
-          </div>
-          <p className="text-[12px] text-faint">Taskly v1.0 · Made to stay out of your way.</p>
-        </Section>
+            <Shortcut keys={['Esc']} label="Close or clear" />
+          </Group>
+        </div>
+
+        <p className="text-center text-[12px] text-faint">Taskly v1.0 · Made to stay out of your way.</p>
       </div>
     </Modal>
+  );
+}
+
+/** Three mini previews of the app in light, dark and system themes. */
+function ThemePicker({ value, onChange }: { value: Theme; onChange: (t: Theme) => void }) {
+  const options: { value: Theme; label: string; icon: ReactNode; preview: string }[] = [
+    { value: 'light', label: 'Light', icon: <Sun className="size-3.5" />, preview: '#fbfbfc' },
+    { value: 'dark', label: 'Dark', icon: <Moon className="size-3.5" />, preview: '#141519' },
+    { value: 'system', label: 'System', icon: <Laptop className="size-3.5" />, preview: 'linear-gradient(90deg, #fbfbfc 50%, #141519 50%)' },
+  ];
+  return (
+    <div role="radiogroup" aria-label="Theme" className="grid grid-cols-3 gap-2.5">
+      {options.map((o) => {
+        const selected = value === o.value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            onClick={() => onChange(o.value)}
+            className="group flex flex-col gap-2 text-left transition-transform duration-150 ease-out active:scale-[0.97]"
+          >
+            <span
+              className={cn(
+                'relative block h-16 overflow-hidden rounded-xl border transition-[box-shadow,border-color] duration-150',
+                selected ? 'border-transparent ring-2 ring-accent' : 'border-line group-hover:border-line-strong',
+              )}
+              style={{ background: o.preview }}
+              aria-hidden
+            >
+              {/* A tiny mock of the task list. */}
+              <span className="absolute top-2.5 left-2.5 flex w-[60%] flex-col gap-1.5">
+                <span className="h-1.5 w-2/3 rounded-full bg-[var(--accent)] opacity-80" />
+                <span className="h-1.5 rounded-full bg-[#8b8f9a]/35" />
+                <span className="h-1.5 w-4/5 rounded-full bg-[#8b8f9a]/35" />
+              </span>
+            </span>
+            <span className={cn('flex items-center gap-1.5 text-[13px] font-medium', selected ? 'text-fg' : 'text-muted')}>
+              {o.icon}
+              {o.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -255,15 +329,18 @@ function ListManager({ confirm }: { confirm: (o: ConfirmOptions) => void }) {
   };
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <>
       {data.categories.map((c) => {
         const count = data.tasks.filter((t) => t.categoryId === c.id).length;
         return (
-          <div key={c.id} className="group flex items-center gap-2 rounded-xl border border-line bg-surface py-1 pr-1 pl-2">
+          <div key={c.id} className="flex items-center gap-2 py-1.5 pr-2 pl-2.5">
             <Popover
               trigger={({ toggle }) => (
                 <button type="button" onClick={toggle} className="grid size-8 place-items-center rounded-lg hover:bg-hover" aria-label={`Color for ${c.name}`}>
-                  <span className="size-3 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[c.color] }} />
+                  <span
+                    className="size-3 rounded-full"
+                    style={{ backgroundColor: CATEGORY_COLORS[c.color], boxShadow: `0 0 0 3px color-mix(in oklab, ${CATEGORY_COLORS[c.color]} 18%, transparent)` }}
+                  />
                 </button>
               )}
             >
@@ -290,7 +367,9 @@ function ListManager({ confirm }: { confirm: (o: ConfirmOptions) => void }) {
               )}
             </Popover>
             <InlineName value={c.name} onCommit={(v) => updateCategory(c.id, { name: v })} />
-            <span className="text-[12px] text-faint tabular-nums">{count}</span>
+            <span className="rounded-full bg-hover px-2 py-0.5 text-[11.5px] font-medium text-muted tabular-nums">
+              {count} {count === 1 ? 'task' : 'tasks'}
+            </span>
             <button
               type="button"
               aria-label={`Delete ${c.name}`}
@@ -305,9 +384,9 @@ function ListManager({ confirm }: { confirm: (o: ConfirmOptions) => void }) {
                       label: 'Delete list',
                       tone: 'danger',
                       onClick: () => {
-                        deleteCategory(c.id);
+                        const undo = deleteCategory(c.id);
                         if (prefs.lastScope === c.id) setPrefs({ lastScope: null });
-                        toast(`Deleted “${c.name}”`);
+                        toast(`Deleted “${c.name}”`, { action: { label: 'Undo', onClick: undo } });
                       },
                     },
                   ],
@@ -325,9 +404,9 @@ function ListManager({ confirm }: { confirm: (o: ConfirmOptions) => void }) {
           e.preventDefault();
           add();
         }}
-        className="flex items-center gap-2 rounded-xl border border-dashed border-line-strong py-1 pr-1 pl-2"
+        className="flex items-center gap-2 py-1.5 pr-2 pl-2.5"
       >
-        <span className="grid size-8 place-items-center text-faint">
+        <span className="grid size-8 place-items-center rounded-lg border border-dashed border-line-strong text-faint">
           <Plus className="size-4" />
         </span>
         <input
@@ -336,15 +415,15 @@ function ListManager({ confirm }: { confirm: (o: ConfirmOptions) => void }) {
           placeholder="New list"
           maxLength={32}
           aria-label="New list name"
-          className="h-8 min-w-0 flex-1 bg-transparent text-[14px] outline-none placeholder:text-faint"
+          className="h-8 min-w-0 flex-1 bg-transparent px-1 text-[14px] outline-none placeholder:text-faint"
         />
         {name.trim() && (
-          <button type="submit" className="h-8 rounded-lg bg-accent px-3 text-[13px] font-semibold text-accent-fg">
+          <button type="submit" className="btn-primary h-8 rounded-[10px] px-3 text-[13px] font-medium">
             Add
           </button>
         )}
       </form>
-    </div>
+    </>
   );
 }
 
@@ -352,21 +431,27 @@ function ListManager({ confirm }: { confirm: (o: ConfirmOptions) => void }) {
 function AddToHomeScreen() {
   if (isStandalone()) {
     return (
-      <p className="flex items-center gap-2 text-[12.5px] text-muted">
-        <Check className="size-3.5 text-[#30a46c]" /> Running from your home screen
-      </p>
+      <SettingRow
+        icon={
+          <span className="grid size-8 place-items-center rounded-full bg-[#30a46c]/12 text-[#30a46c]">
+            <Check className="size-4" />
+          </span>
+        }
+        label="Installed"
+        hint="Running from your home screen"
+      />
     );
   }
   if (!isIOS()) return null;
   const step = (n: number, body: ReactNode) => (
     <li className="flex items-center gap-3">
-      <span className="grid size-5 shrink-0 place-items-center rounded-full bg-accent-soft text-[11px] font-semibold text-accent">{n}</span>
+      <span className="grid size-5 shrink-0 place-items-center rounded-full bg-accent-soft text-[11px] font-medium text-accent">{n}</span>
       <span className="flex flex-wrap items-center gap-1">{body}</span>
     </li>
   );
   return (
-    <div className="rounded-xl border border-line px-3.5 py-3">
-      <p className="text-[13.5px] font-medium">Add Taskly to your Home Screen</p>
+    <div className="px-4 py-3.5">
+      <p className="text-[14px] font-medium">Add Taskly to your Home Screen</p>
       <p className="mt-0.5 text-[12.5px] text-muted">It opens full-screen like an app and works offline.</p>
       <ol className="mt-3 flex flex-col gap-2 text-[13px]">
         {step(1, <>Tap <Share className="mx-0.5 size-4 text-accent" aria-label="Share" /> in Safari’s toolbar</>)}
@@ -393,42 +478,95 @@ function InlineName({ value, onCommit }: { value: string; onCommit: (v: string) 
       onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
       maxLength={32}
       aria-label="List name"
-      className="h-8 min-w-0 flex-1 rounded-md bg-transparent px-1 text-[14px] outline-none focus:bg-hover"
+      className="h-8 min-w-0 flex-1 rounded-md bg-transparent px-1 text-[14px] outline-none transition-colors hover:bg-hover focus:bg-hover"
     />
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+/** A titled group of rows in one card. `danger` tints the border red. */
+function Group({
+  icon,
+  title,
+  description,
+  tone,
+  children,
+}: {
+  icon: ReactNode;
+  title: string;
+  description?: string;
+  tone?: 'danger';
+  children: ReactNode;
+}) {
   return (
-    <section className="flex flex-col gap-3">
-      <h3 className="text-[11.5px] font-semibold tracking-[0.06em] text-faint uppercase">{title}</h3>
-      {children}
+    <section>
+      <header className="mb-2 px-1">
+        <h3 className={cn('flex items-center gap-2 text-[13px] font-medium', tone === 'danger' ? 'text-[#e5484d]' : 'text-fg')}>
+          <span className={tone === 'danger' ? '' : 'text-muted'}>{icon}</span>
+          {title}
+        </h3>
+        {description && <p className="mt-1 text-[12.5px] leading-relaxed text-muted">{description}</p>}
+      </header>
+      <div
+        className={cn(
+          'flex flex-col divide-y overflow-hidden rounded-2xl border bg-elevated',
+          tone === 'danger' ? 'border-[#e5484d]/25 divide-[#e5484d]/15' : 'divide-line border-line',
+        )}
+      >
+        {children}
+      </div>
     </section>
   );
 }
 
-function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+function SettingRow({ icon, label, hint, stack, children }: { icon?: ReactNode; label: string; hint?: string; stack?: boolean; children?: ReactNode }) {
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <p className="text-[14px] font-medium">{label}</p>
-        {hint && <p className="text-[12.5px] text-muted">{hint}</p>}
+    <div className={cn('flex gap-3 px-4 py-3.5', stack ? 'flex-col' : 'flex-wrap items-center justify-between')}>
+      <div className="flex min-w-0 items-center gap-3">
+        {icon}
+        <div className="min-w-0">
+          <p className="text-[14px] font-medium">{label}</p>
+          {hint && <p className="mt-0.5 text-[12.5px] text-muted">{hint}</p>}
+        </div>
       </div>
       {children}
     </div>
   );
 }
 
-function DangerRow({ label, detail, onClick, disabled }: { label: string; detail: string; onClick: () => void; disabled?: boolean }) {
+/** Full-width tappable row with an icon, label, hint and a chevron. */
+function ActionRow({
+  icon,
+  label,
+  hint,
+  onClick,
+  danger,
+  disabled,
+}: {
+  icon: ReactNode;
+  label: string;
+  hint: string;
+  onClick: () => void;
+  danger?: boolean;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="flex items-center justify-between px-3.5 py-3 text-left transition-colors first:rounded-t-xl last:rounded-b-xl hover:bg-hover disabled:opacity-50 disabled:hover:bg-transparent"
+      className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors duration-150 hover:bg-hover disabled:opacity-50 disabled:hover:bg-transparent"
     >
-      <span className="text-[13.5px] font-medium text-[#e5484d]">{label}</span>
-      <span className="text-[12.5px] text-faint">{detail}</span>
+      <span
+        className={cn('grid size-8 shrink-0 place-items-center rounded-full', !danger && 'bg-hover text-fg/80')}
+        style={danger ? { color: DANGER, backgroundColor: `color-mix(in oklab, ${DANGER} 11%, transparent)` } : undefined}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className={cn('block text-[14px] font-medium', danger && 'text-[#e5484d]')}>{label}</span>
+        <span className="mt-0.5 block text-[12.5px] text-muted">{hint}</span>
+      </span>
+      <ChevronRight className="size-4 shrink-0 text-faint" />
     </button>
   );
 }
@@ -452,8 +590,8 @@ export function Segmented<T extends string>({
           aria-checked={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            'inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[13px] font-medium transition-all',
-            value === o.value ? 'bg-elevated text-fg shadow-soft' : 'text-muted hover:text-fg',
+            'inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-[13px] font-medium transition-[background-color,color,box-shadow] duration-150',
+            value === o.value ? 'bg-elevated text-fg shadow-soft dark:bg-white/12' : 'text-muted hover:text-fg',
           )}
         >
           {o.icon}
@@ -486,11 +624,11 @@ function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: 
 
 function Shortcut({ keys, label }: { keys: string[]; label: string }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between px-4 py-3 text-[13.5px]">
       <span>{label}</span>
       <span className="flex gap-1">
         {keys.map((k) => (
-          <kbd key={k} className="rounded-md border border-line bg-surface px-1.5 font-sans text-[11px] text-muted">
+          <kbd key={k} className="grid h-6 min-w-6 place-items-center rounded-md border border-line bg-surface px-1.5 font-sans text-[11.5px] text-muted shadow-[0_1px_0_var(--line)]">
             {k}
           </kbd>
         ))}

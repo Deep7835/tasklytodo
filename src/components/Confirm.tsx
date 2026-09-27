@@ -41,8 +41,8 @@ export function ConfirmDialog({ options, onClose }: { options: ConfirmOptions | 
 
 export const btn = (tone: 'danger' | 'primary' | 'default') =>
   cn(
-    'inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-[13.5px] font-semibold transition-[background-color,transform] active:scale-[0.98] sm:h-9',
-    tone === 'primary' && 'bg-accent text-accent-fg hover:brightness-110',
+    'inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-[13.5px] font-medium transition-[background-color,transform] active:scale-[0.98] sm:h-9',
+    tone === 'primary' && 'btn-primary',
     tone === 'danger' && 'bg-[#e5484d] text-white hover:bg-[#d93d42]',
     tone === 'default' && 'border border-line bg-surface text-fg hover:bg-hover',
   );

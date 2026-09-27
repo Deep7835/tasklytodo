@@ -7,7 +7,7 @@ export function EmptyState({ icon, title, body, action }: { icon: ReactNode; tit
         <div className="absolute inset-0 rounded-[20px] bg-accent-soft opacity-60" aria-hidden />
         <span className="relative">{icon}</span>
       </div>
-      <h3 className="text-[15px] font-semibold tracking-[-0.01em]">{title}</h3>
+      <h3 className="text-[15px] font-medium tracking-[-0.01em]">{title}</h3>
       <p className="mt-1.5 max-w-[19rem] text-[13.5px] leading-relaxed text-muted">{body}</p>
       {action && <div className="mt-5">{action}</div>}
     </div>

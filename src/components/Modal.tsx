@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { X } from 'reicon-react';
 import { useIsDesktop } from '../lib/hooks';
 import { cn } from '../lib/ui';
 
@@ -129,7 +129,7 @@ export function Modal({ open, onClose, title, hideHeader, variant = 'dialog', si
             </div>
           )}
           <div className={cn('flex items-center justify-between gap-3 px-5', hideHeader ? 'sr-only' : sheet ? 'pt-1.5 pb-2' : 'pt-4 pb-2')}>
-            <h2 id={`${id}-title`} className="text-[15px] font-semibold tracking-[-0.01em]">
+            <h2 id={`${id}-title`} className="text-[15px] font-medium tracking-[-0.01em]">
               {title}
             </h2>
             {!hideHeader && (
