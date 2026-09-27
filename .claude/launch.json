@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "taskly-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--port", "5391", "--strictPort"],
+      "port": 5391
+    },
+    {
+      "name": "taskly-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "preview", "--port", "4391", "--strictPort"],
+      "port": 4391
+    }
+  ]
+}
