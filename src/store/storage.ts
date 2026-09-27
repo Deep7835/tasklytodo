@@ -9,6 +9,7 @@ export const DEFAULT_PREFS: Preferences = {
   theme: 'system',
   accent: 'indigo',
   name: '',
+  avatar: null,
   newTaskPosition: 'top',
   showCompletedInAll: true,
   completedOpen: true,

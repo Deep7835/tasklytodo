@@ -1,5 +1,6 @@
 import { useEffect, useId, useState, type ReactNode } from 'react';
 import { BookOpen, Category, ChevronDown, Hashtag, Inbox, Layers, ListCheck, Plus, Settings2, Sparkles, Sun, Trash2 } from 'reicon-react';
+import { Avatar } from './Avatar';
 import { Modal } from './Modal';
 import { MenuItem, Popover } from './Popover';
 import { CATEGORY_COLORS, cn, nextListColor } from '../lib/ui';
@@ -24,13 +25,14 @@ export function Logo({ className = 'size-7' }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={className} aria-hidden>
       <defs>
+        {/* Follows the accent chosen in Settings: accent → a deeper shade of it. */}
         <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#6B6CF6" />
-          <stop offset="1" stopColor="#4338CA" />
+          <stop offset="0" style={{ stopColor: 'color-mix(in oklab, var(--accent), white 10%)' }} />
+          <stop offset="1" style={{ stopColor: 'color-mix(in oklab, var(--accent), black 28%)' }} />
         </linearGradient>
       </defs>
       <rect width="64" height="64" rx="16" fill={`url(#${id})`} />
-      <path d="M19 33.5l8.5 8.5L45 23" fill="none" stroke="#fff" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19 33.5l8.5 8.5L45 23" fill="none" stroke="var(--accent-fg)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -273,7 +275,7 @@ export function Sidebar({
       {/* Brand, separated from the controls below by a hairline. */}
       <div className="mx-3 flex h-16 items-center gap-2.5 border-b border-line px-2">
         <Logo />
-        <span className="text-[16px] font-medium tracking-[-0.02em]">Taskly</span>
+        <span className="text-[16px] font-medium tracking-[-0.02em]">Taskdeck</span>
       </div>
       <div className="flex flex-col gap-2 px-3 pt-3 pb-3">
         {search}
@@ -337,9 +339,7 @@ export function Sidebar({
           onClick={onSettings}
           className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors duration-150 hover:bg-hover"
         >
-          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft text-[14px] font-medium text-accent">
-            {name ? name[0].toUpperCase() : <Settings2 className="size-4" />}
-          </span>
+          <Avatar className="size-9" />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[13.5px] font-medium">{name || 'Settings'}</span>
             <span className="block truncate text-[12px] text-muted">{name ? 'Settings & backup' : 'Theme, lists & backup'}</span>

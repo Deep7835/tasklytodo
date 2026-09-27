@@ -19,6 +19,7 @@ import { taskCount, templateColor, templateItems, type Template } from './lib/te
 import { CategoryDot } from './components/pickers';
 import { useToast } from './components/Toast';
 import { SidePanel, TodaySummary } from './components/SidePanel';
+import { Avatar } from './components/Avatar';
 
 const FILTERS: { id: Filter; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -338,7 +339,7 @@ export default function App() {
                 <Logo className="size-6" />
                 {/* Large-title pattern: once the greeting scrolls away, the bar shows the current view's name. */}
                 <span className="relative h-6 min-w-0 flex-1 overflow-hidden text-[16px] leading-6 font-medium tracking-[-0.02em]">
-                  <span className={cn('absolute inset-0 transition-[opacity,transform] duration-200 ease-out', pastTitle && '-translate-y-3 opacity-0')}>Taskly</span>
+                  <span className={cn('absolute inset-0 transition-[opacity,transform] duration-200 ease-out', pastTitle && '-translate-y-3 opacity-0')}>Taskdeck</span>
                   <span
                     aria-hidden={!pastTitle}
                     className={cn('absolute inset-0 truncate transition-[opacity,transform] duration-200 ease-out', !pastTitle && 'translate-y-3 opacity-0')}
@@ -357,6 +358,14 @@ export default function App() {
                 >
                   <Search className="size-5" />
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setSettingsOpen(true)}
+                  aria-label="Profile and settings"
+                  className="rounded-full transition-transform duration-150 ease-out active:scale-95"
+                >
+                  <Avatar className="size-9" />
+                </button>
               </>
             )}
           </div>
@@ -370,19 +379,22 @@ export default function App() {
           <>
           {/* Header: greeting, plus filter chips on the right from lg up */}
           <div className="flex items-start justify-between gap-6 lg:items-end">
-            <div className="min-w-0 animate-rise-in">
+            <div className="min-w-0 flex-1 animate-rise-in lg:flex-initial">
               <p className="text-[12px] font-medium tracking-[0.06em] text-muted uppercase">{longDate(now)}</p>
-              {/* Phones stack the status pill under the title; wider screens keep it on the same line. */}
+              {/* Phones stack the status row under the title; wider screens keep it on the same line. */}
               <div className="mt-1 flex flex-col items-start gap-2.5 md:flex-row md:flex-wrap md:items-center md:gap-x-3 md:gap-y-2">
-                <h1 className="text-[28px] leading-tight font-medium tracking-[-0.025em] whitespace-nowrap md:text-[24px]">
+                <h1 className="text-[28px] leading-tight font-medium tracking-[-0.025em] md:text-[24px] md:whitespace-nowrap">
                   {greeting(now)}
                   {firstName && <span className="text-muted">, {firstName}</span>}
                 </h1>
-                <TodayStatus stats={stats} />
+                {/* Status pill, with today's battery beside it below lg (the side panel covers it on wide screens). */}
+                <div className="flex w-full items-center justify-between gap-3 md:w-auto md:justify-start">
+                  <TodayStatus stats={stats} />
+                  <span className="lg:hidden">
+                    <TodayBattery done={stats.done} total={stats.total} />
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="lg:hidden">
-              <TodayBattery done={stats.done} total={stats.total} />
             </div>
             {!query && renderFilters('chips')}
           </div>
@@ -707,34 +719,38 @@ function TodayStatus({ stats }: { stats: { open: number; overdue: number; done: 
 
 const BATTERY_CELLS = 5;
 
-/** Today's progress as a battery: GitHub-green cells fill left to right as tasks get done. */
+/** Today's progress as a compact battery: GitHub-green cells fill left to right, with the percentage beside it. */
 function TodayBattery({ done, total }: { done: number; total: number }) {
   const pct = total ? done / total : 0;
   const filled = Math.round(pct * BATTERY_CELLS);
+  const complete = total > 0 && done === total;
   return (
-    <div
-      className="flex shrink-0 flex-col items-end gap-1.5"
+    <span
+      className={cn('flex shrink-0 items-center gap-2', !total && 'opacity-60')}
       role="img"
       aria-label={total ? `${done} of ${total} tasks done today` : 'No tasks due today'}
       title={total ? `${done} of ${total} done today` : 'No tasks due today'}
     >
-      <div className="flex items-center">
-        <div className="flex h-8 w-[72px] gap-[3px] rounded-[10px] border-2 border-line-strong p-[3px]">
+      <span className="flex items-center">
+        <span className="flex h-[22px] w-[50px] gap-[2px] rounded-[7px] border-[1.5px] border-fg/30 p-[2px]">
           {Array.from({ length: BATTERY_CELLS }, (_, i) => (
             <span
               key={i}
-              className="flex-1 rounded-[4px] transition-[background-color] duration-300 ease-out"
+              className="flex-1 rounded-[3px] transition-[background-color] duration-300 ease-out"
               // Filled cells deepen toward the right, like the activity graph's levels.
               style={{
-                backgroundColor: i < filled ? `color-mix(in oklab, ${DONE_GREEN} ${45 + (i * 55) / (BATTERY_CELLS - 1)}%, transparent)` : 'var(--line)',
+                backgroundColor:
+                  i < filled ? `color-mix(in oklab, ${DONE_GREEN} ${45 + (i * 55) / (BATTERY_CELLS - 1)}%, transparent)` : 'var(--line-strong)',
               }}
             />
           ))}
-        </div>
-        <span className="ml-[2px] h-3.5 w-[3px] rounded-r-[2px] bg-line-strong" aria-hidden />
-      </div>
-      <span className="text-[11.5px] font-medium text-muted tabular-nums">{total ? `${Math.round(pct * 100)}% · ${done}/${total}` : 'No tasks today'}</span>
-    </div>
+        </span>
+        <span className="ml-[1.5px] h-2 w-[2.5px] rounded-r-[2px] bg-fg/30" aria-hidden />
+      </span>
+      <span className="min-w-8 text-[12.5px] font-medium text-muted tabular-nums" style={{ color: complete ? DONE_GREEN : undefined }}>
+        {total ? `${Math.round(pct * 100)}%` : '–'}
+      </span>
+    </span>
   );
 }
 

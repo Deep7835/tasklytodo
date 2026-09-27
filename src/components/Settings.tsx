@@ -6,6 +6,7 @@ import {
   Danger,
   DocumentDownload,
   Download,
+  Edit2,
   Keyboard,
   Laptop,
   Layers,
@@ -22,11 +23,13 @@ import {
   Wifi,
   WifiOff,
 } from 'reicon-react';
+import { Avatar, AvatarImage } from './Avatar';
 import { Modal } from './Modal';
 import { Popover } from './Popover';
 import { btn, type ConfirmOptions } from './Confirm';
 import { useToast } from './Toast';
 import { ACCENTS, CATEGORY_COLORS, cn, nextListColor } from '../lib/ui';
+import { AVATARS, findAvatar } from '../lib/avatars';
 import { todayKey } from '../lib/date';
 import { useStore } from '../store/store';
 import { buildBackup, parseBackup } from '../store/storage';
@@ -48,6 +51,7 @@ export function Settings({ open, onClose, confirm }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const install = useInstallPrompt();
   const online = useOnline();
+  const [pickingAvatar, setPickingAvatar] = useState(false);
 
   const exportJson = () => {
     const backup = buildBackup(data, prefs);
@@ -104,23 +108,59 @@ export function Settings({ open, onClose, confirm }: Props) {
       {/* Grouped cards on a quiet background, like iOS settings. */}
       <div className="flex flex-col gap-6 bg-sidebar px-4 pt-4 pb-6 sm:px-5">
         {/* Profile */}
-        <div className="flex items-center gap-4 rounded-2xl border border-line bg-elevated p-4">
-          <span className="btn-primary grid size-14 shrink-0 place-items-center rounded-full text-[22px] font-medium" aria-hidden>
-            {name ? name[0].toUpperCase() : <User className="size-6" />}
-          </span>
-          <div className="min-w-0 flex-1">
-            <input
-              value={prefs.name}
-              onChange={(e) => setPrefs({ name: e.target.value })}
-              placeholder="Add your name"
-              maxLength={40}
-              aria-label="Your name"
-              className="-mx-1.5 h-8 w-[calc(100%+0.75rem)] rounded-lg bg-transparent px-1.5 text-[17px] font-medium tracking-[-0.01em] outline-none transition-colors placeholder:text-faint hover:bg-hover focus:bg-hover"
-            />
-            <p className="mt-0.5 text-[12.5px] text-muted tabular-nums">
-              {data.tasks.length} tasks · {data.categories.length} lists · {completedCount} done
-            </p>
+        <div className="rounded-2xl border border-line bg-elevated p-4">
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={() => setPickingAvatar((v) => !v)}
+              aria-label="Change avatar"
+              aria-expanded={pickingAvatar}
+              className="relative shrink-0 rounded-full transition-transform duration-150 ease-out active:scale-95"
+            >
+              <Avatar className="size-16" textClass="text-[24px]" />
+              <span className="absolute -right-0.5 -bottom-0.5 grid size-6 place-items-center rounded-full border border-line bg-elevated text-muted shadow-soft">
+                <Edit2 className="size-3" />
+              </span>
+            </button>
+            <div className="min-w-0 flex-1">
+              <input
+                value={prefs.name}
+                onChange={(e) => setPrefs({ name: e.target.value })}
+                placeholder="Add your name"
+                maxLength={40}
+                aria-label="Your name"
+                className="-mx-1.5 h-8 w-[calc(100%+0.75rem)] rounded-lg bg-transparent px-1.5 text-[17px] font-medium tracking-[-0.01em] outline-none transition-colors placeholder:text-faint hover:bg-hover focus:bg-hover"
+              />
+              <p className="mt-0.5 text-[12.5px] text-muted tabular-nums">
+                {data.tasks.length} tasks · {data.categories.length} lists · {completedCount} done
+              </p>
+              <button
+                type="button"
+                onClick={() => setPickingAvatar((v) => !v)}
+                className="mt-1 text-[12.5px] font-medium text-accent underline-offset-4 hover:underline"
+              >
+                {pickingAvatar ? 'Done' : 'Change avatar'}
+              </button>
+            </div>
           </div>
+
+          {pickingAvatar && (
+            <div className="mt-4 animate-fade-in border-t border-line pt-4">
+              <p className="mb-3 text-[12.5px] text-muted">Choose an avatar. It shows in the sidebar and app bar.</p>
+              <div role="radiogroup" aria-label="Avatar" className="grid grid-cols-4 gap-3 sm:grid-cols-6">
+                <AvatarOption selected={!findAvatar(prefs.avatar)} label="Initial" onClick={() => setPrefs({ avatar: null })}>
+                  <span className="btn-primary grid size-full place-items-center rounded-full text-[18px] font-medium">
+                    {name ? name[0].toUpperCase() : <User className="size-5" />}
+                  </span>
+                </AvatarOption>
+                {AVATARS.map((a) => (
+                  <AvatarOption key={a.id} selected={prefs.avatar === a.id} label={a.label} onClick={() => setPrefs({ avatar: a.id })}>
+                    <AvatarImage avatar={a} className="size-full" />
+                  </AvatarOption>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <Group icon={<ColorSwatch className="size-4" />} title="Appearance">
@@ -266,6 +306,34 @@ export function Settings({ open, onClose, confirm }: Props) {
         <p className="text-center text-[12px] text-faint">Taskly v1.0 · Made to stay out of your way.</p>
       </div>
     </Modal>
+  );
+}
+
+function AvatarOption({ selected, label, onClick, children }: { selected: boolean; label: string; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className="group relative mx-auto aspect-square w-full max-w-14 rounded-full transition-transform duration-150 ease-out active:scale-95"
+    >
+      <span
+        className={cn(
+          'block size-full rounded-full ring-offset-2 ring-offset-elevated transition-shadow duration-150',
+          selected ? 'ring-2 ring-accent' : 'ring-1 ring-line group-hover:ring-line-strong',
+        )}
+      >
+        {children}
+      </span>
+      {selected && (
+        <span className="absolute -right-0.5 -bottom-0.5 grid size-5 place-items-center rounded-full bg-accent text-accent-fg ring-2 ring-elevated">
+          <Check className="size-3" strokeWidth={3} />
+        </span>
+      )}
+    </button>
   );
 }
 

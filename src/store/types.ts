@@ -34,6 +34,8 @@ export interface Preferences {
   theme: Theme;
   accent: Accent;
   name: string;
+  /** Id of a picture in /public/avatars; `null` shows the name's initial. */
+  avatar: string | null;
   newTaskPosition: 'top' | 'bottom';
   showCompletedInAll: boolean;
   completedOpen: boolean;
