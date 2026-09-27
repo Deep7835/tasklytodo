@@ -2,10 +2,12 @@ import { useRef, useState } from 'react';
 import {
   Airplane,
   ArrowLeft,
+  ArrowRight,
   BookOpen,
   Briefcase,
   Code,
   Confetti,
+  Edit2,
   Eye,
   HeartPulse,
   Home,
@@ -23,6 +25,7 @@ import {
   type IconComponent,
 } from 'reicon-react';
 import { EmptyState } from './EmptyState';
+import { POSTS } from '../blog/posts';
 import { Modal } from './Modal';
 import { CATEGORY_COLORS, cn } from '../lib/ui';
 import {
@@ -308,5 +311,80 @@ function TemplateDetail({ template, onClose, onUse }: { template: Template | nul
         </div>
       )}
     </Modal>
+  );
+}
+
+const GUIDE_STEPS: { icon: IconComponent; title: string; body: string }[] = [
+  { icon: Sparkles, title: 'Pick a template', body: 'Browse by category or search by name, and open Preview to see every task before you commit.' },
+  { icon: Layers, title: 'Use it', body: 'Its tasks are copied into a brand-new list in order, grouped under the same sections.' },
+  { icon: Edit2, title: 'Make it yours', body: 'Rename, reorder, add due dates or delete tasks. The original template never changes.' },
+];
+
+const GUIDE_FAQ: { q: string; a: string }[] = [
+  { q: 'Does editing my list change the template?', a: 'No. Using a template makes a copy, so your list and the template are completely separate from then on.' },
+  { q: 'Can I use the same template twice?', a: 'Yes. Each use creates a new list; the second one is named with a number, like “Travel Planning 2”.' },
+  { q: 'Can I add sections to my own lists?', a: 'Yes. Open any task in a list and type a name in its Section field. Tasks with the same section are grouped together.' },
+  { q: 'Do templates work offline?', a: 'Yes. Templates are built into the app, so you can browse and use them without a connection.' },
+];
+
+/** Full-width explainer below the template grid: how it works, FAQ and a pointer to the blog. */
+export function TemplatesGuide() {
+  const post = POSTS[0];
+  return (
+    <section aria-labelledby="templates-guide" className="mt-10 flex flex-col gap-4 xl:mt-8">
+      <div className="card-surface rounded-[24px] p-6 md:p-8">
+        <p className="text-[12px] font-medium tracking-[0.06em] text-muted uppercase">How it works</p>
+        <h2 id="templates-guide" className="mt-1.5 text-[22px] leading-tight font-medium tracking-[-0.02em]">
+          From template to done in three steps
+        </h2>
+        <ol className="mt-6 grid gap-3 md:grid-cols-3">
+          {GUIDE_STEPS.map((s, i) => (
+            <li key={s.title} className="rounded-2xl bg-section-muted p-4">
+              <div className="flex items-center gap-3">
+                <span className="btn-primary grid size-7 place-items-center rounded-full text-[13px] font-medium">{i + 1}</span>
+                <s.icon className="size-5 text-muted" />
+              </div>
+              <h3 className="mt-3 text-[15px] font-medium tracking-[-0.01em]">{s.title}</h3>
+              <p className="mt-1 text-[13.5px] leading-relaxed text-muted">{s.body}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div className="card-surface rounded-[24px] p-6">
+          <h2 className="text-[17px] font-medium tracking-[-0.01em]">Questions &amp; answers</h2>
+          <div className="mt-3 divide-y divide-line">
+            {GUIDE_FAQ.map((f) => (
+              <details key={f.q} className="group py-3">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[14px] font-medium [&::-webkit-details-marker]:hidden">
+                  {f.q}
+                  <Plus className="size-4 shrink-0 text-muted transition-transform duration-200 ease-out group-open:rotate-45" />
+                </summary>
+                <p className="mt-2 pr-7 text-[13.5px] leading-relaxed text-muted">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+
+        {post && (
+          <a
+            href={`/blog/${post.slug}`}
+            className="card-surface group flex flex-col rounded-[24px] p-6 transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-float"
+          >
+            <span className="flex items-center gap-2 text-[12px] font-medium tracking-[0.06em] text-muted uppercase">
+              <BookOpen className="size-4" />
+              From the blog
+            </span>
+            <span className="mt-3 text-[17px] leading-snug font-medium tracking-[-0.01em]">{post.title}</span>
+            <span className="mt-1.5 line-clamp-3 text-[13.5px] leading-relaxed text-muted">{post.description}</span>
+            <span className="mt-auto inline-flex items-center gap-1.5 pt-4 text-[13.5px] font-medium text-accent">
+              Read the article
+              <ArrowRight className="size-4 transition-transform duration-200 ease-out group-hover:translate-x-0.5" />
+            </span>
+          </a>
+        )}
+      </div>
+    </section>
   );
 }

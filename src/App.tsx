@@ -14,7 +14,7 @@ import { ConfirmDialog, type ConfirmOptions } from './components/Confirm';
 import { EmptyState } from './components/EmptyState';
 import { Modal } from './components/Modal';
 import { ListsSheet, Logo, MobileTabBar, Sidebar, startNewList, type NavState } from './components/Nav';
-import { TemplatesView } from './components/Templates';
+import { TemplatesGuide, TemplatesView } from './components/Templates';
 import { taskCount, templateColor, templateItems, type Template } from './lib/templates';
 import { CategoryDot } from './components/pickers';
 import { useToast } from './components/Toast';
@@ -371,7 +371,9 @@ export default function App() {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-[760px] flex-1 px-4 pt-3 pb-40 sm:px-6 md:px-12 md:pt-8 md:pb-24 lg:max-w-none lg:px-10 xl:grid xl:max-w-[1480px] xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start xl:gap-8 xl:px-8">
+        <main className="mx-auto w-full max-w-[760px] flex-1 px-4 pt-3 pb-40 sm:px-6 md:px-12 md:pt-8 md:pb-24 lg:max-w-none lg:px-10 xl:max-w-[1480px] xl:px-8">
+          {/* Two columns; the sticky side panel is bounded by this wrapper so it never covers content below. */}
+          <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start xl:gap-8">
           <div className="min-w-0">
           {mainView === 'templates' ? (
             <TemplatesView onUse={applyTemplate} />
@@ -560,6 +562,10 @@ export default function App() {
 
           {/* Desktop side panel: fills the empty right side on wide screens. */}
           <SidePanel stats={stats} tasks={data.tasks} categories={data.categories} scope={scope} onOpen={onOpen} onScope={(id) => go(id, 'all')} />
+          </div>
+
+          {/* Full-width explainer under both columns. */}
+          {mainView === 'templates' && <TemplatesGuide />}
         </main>
       </div>
 
